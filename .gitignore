@@ -1,0 +1,13 @@
+/build*/
+/.cache/
+/.qa/
+/benchmarks/local/
+/data/
+*.cover
+*.pdf
+*.o
+*.a
+*.dSYM/
+.DS_Store
+__pycache__/
+/.venv/

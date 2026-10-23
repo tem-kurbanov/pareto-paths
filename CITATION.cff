@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use this implementation, please cite the associated research paper."
+title: "pareto-paths: multicriteria routing with k-path-cover acceleration"
+type: software
+license: MIT
+repository-code: "https://github.com/tem-kurbanov/pareto-paths"
+version: 0.1.0
+authors:
+  - family-names: Kurbanov
+    given-names: Temirlan
+preferred-citation:
+  type: article
+  title: "Fast One-to-Many Multicriteria Shortest Path Search"
+  authors:
+    - family-names: Kurbanov
+      given-names: Temirlan
+    - family-names: Cuchý
+      given-names: Marek
+    - family-names: Vokřínek
+      given-names: Jiří
+  journal: "IEEE Transactions on Intelligent Transportation Systems"
+  year: 2023
+  volume: 24
+  issue: 10
+  start: 10410
+  end: 10419
+  doi: 10.1109/TITS.2023.3282069
