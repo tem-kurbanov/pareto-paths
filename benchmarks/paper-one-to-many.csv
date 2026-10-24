@@ -1,0 +1,8 @@
+dataset,region,criteria,correlation,vertices,edges,goals,k,mls_mean_seconds,mls_stddev_seconds,t_mls_mean_seconds,t_mls_stddev_seconds,kpc_mls_mean_seconds,kpc_mls_stddev_seconds,t_kpc_mls_mean_seconds,t_kpc_mls_stddev_seconds,t_kpc_mls_speedup_vs_mls
+B-2-C,Bavaria,2,correlated,294727,587782,1000,32,4.24,2.76,3.69,2.08,0.89,0.45,0.83,0.41,5.07
+B-2-U,Bavaria,2,uncorrelated,294727,587782,1000,32,870.30,870.79,162.71,112.96,220.73,236.47,36.15,26.13,24.07
+B-3-C,Bavaria,3,correlated,294727,587782,1000,32,69.66,121.81,63.25,92.99,9.01,18.08,9.11,16.31,7.65
+B-3-U,Bavaria,3,uncorrelated,294727,587782,1000,32,,,8100.95,6472.87,51801.95,55113.33,2577.58,2296.01,
+G-2-C,Germany,2,correlated,1521776,2947009,6000,32,47.58,35.81,34.91,17.79,7.74,4.41,7.04,3.61,6.75
+G-2-U,Germany,2,uncorrelated,1521776,2947009,6000,32,4488.91,2911.09,1021.18,495.92,1224.96,833.04,212.26,100.65,21.15
+G-3-C,Germany,3,correlated,1521776,2947009,6000,32,3538.09,3067.47,2460.66,1782.28,521.99,467.18,469.48,367.45,7.54

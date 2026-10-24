@@ -318,15 +318,16 @@ Usage:
   pareto-paths benchmark [--preset NAME | --input FILE] [options]
 
 Graph options:
-  --format csv|legacy-edges|legacy-random|legacy-full|dimacs
+  --format csv|dimacs
   --model additive|ev       --capacity INT (EV only)
-  --nodes FILE              --second-weights FILE (paired DIMACS)
+  --nodes FILE              --second-weights FILE (separate DIMACS graphs)
+  DIMACS input may contain both graph blocks in one file, without test-query pairs.
   --preset independent2|independent3|correlated2|correlated3|reciprocal|ev
   --nodes-count 64          --seed 42
 
 Search options:
   --source 0               --target ID[,ID...] (default: last vertex)
-  --algorithm mls|t-mls|kpc-mls|t-kpc-mls|ima|blset|kpc-ima|kpc-ima-straight
+  --algorithm mls|t-mls|kpc-mls|t-kpc-mls|ima|blset|t-kpc-ima
   --output text|json        --max-labels 1000000
   --cover FILE              --k 16              --max-states 2000000
   --triangle true|false     Optional exact triangle shortcut pruning (default false)

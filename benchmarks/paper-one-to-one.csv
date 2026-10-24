@@ -1,0 +1,6 @@
+dataset,criteria,k,origin_destination_pairs,ima_speedup,t_kpc_ima_speedup
+NY,2,16,100,1.00,2.96
+BAY,2,16,100,1.00,5.51
+COL,2,16,100,1.00,8.67
+FLA,2,16,100,1.00,12.95
+NE,2,16,100,1.00,8.13

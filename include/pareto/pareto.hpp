@@ -98,7 +98,7 @@ class Cover {
 void save_cover(const Cover& cover, const std::filesystem::path& path);
 [[nodiscard]] Cover load_cover(const Graph& graph, const std::filesystem::path& path);
 
-enum class Algorithm { mls, t_mls, kpc_mls, t_kpc_mls, ima, blset, kpc_ima, kpc_ima_straight };
+enum class Algorithm { mls, t_mls, kpc_mls, t_kpc_mls, ima, blset, t_kpc_ima };
 [[nodiscard]] std::string algorithm_name(Algorithm algorithm);
 [[nodiscard]] Algorithm parse_algorithm(const std::string& name);
 [[nodiscard]] bool uses_cover(Algorithm algorithm);
@@ -131,10 +131,11 @@ struct SearchResult {
                                   SearchOptions options = {}, const Cover* cover = nullptr);
 
 struct LoadOptions {
-  std::string format{"csv"};  // csv, legacy-edges, legacy-random, legacy-full, dimacs
+  std::string format{"csv"};  // csv or dimacs
   Model model{Model::additive};
   std::int64_t capacity{40'000'000};
   std::optional<std::filesystem::path> nodes;
+  // For separate DIMACS weight files. Omit for one file containing both blocks.
   std::optional<std::filesystem::path> second_weights;
 };
 [[nodiscard]] Graph load_graph(const std::filesystem::path& path, LoadOptions options = {});

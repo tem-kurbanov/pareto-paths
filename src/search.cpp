@@ -25,22 +25,19 @@ std::string algorithm_name(Algorithm a) {
       return "ima";
     case Algorithm::blset:
       return "blset";
-    case Algorithm::kpc_ima:
-      return "kpc-ima";
-    case Algorithm::kpc_ima_straight:
-      return "kpc-ima-straight";
+    case Algorithm::t_kpc_ima:
+      return "t-kpc-ima";
   }
   throw std::invalid_argument("unknown algorithm enum");
 }
 Algorithm parse_algorithm(const std::string& name) {
   for (auto a : {Algorithm::mls, Algorithm::t_mls, Algorithm::kpc_mls, Algorithm::t_kpc_mls,
-                 Algorithm::ima, Algorithm::blset, Algorithm::kpc_ima, Algorithm::kpc_ima_straight})
+                 Algorithm::ima, Algorithm::blset, Algorithm::t_kpc_ima})
     if (algorithm_name(a) == name) return a;
   throw std::invalid_argument("unknown algorithm: " + name);
 }
 bool uses_cover(Algorithm a) {
-  return a == Algorithm::kpc_mls || a == Algorithm::t_kpc_mls || a == Algorithm::kpc_ima ||
-         a == Algorithm::kpc_ima_straight;
+  return a == Algorithm::kpc_mls || a == Algorithm::t_kpc_mls || a == Algorithm::t_kpc_ima;
 }
 namespace {
 constexpr auto no_parent = std::numeric_limits<std::size_t>::max();
@@ -102,12 +99,12 @@ SearchResult search(const Graph& graph, Node source, std::vector<Node> targets,
   if (source >= graph.size()) throw std::out_of_range("source out of range");
   const auto name = algorithm_name(options.algorithm);
   const bool overlay = uses_cover(options.algorithm);
-  const bool bounded =
-      options.algorithm == Algorithm::ima || options.algorithm == Algorithm::blset ||
-      options.algorithm == Algorithm::kpc_ima || options.algorithm == Algorithm::kpc_ima_straight;
-  const bool reduced =
-      options.algorithm == Algorithm::t_mls || options.algorithm == Algorithm::t_kpc_mls ||
-      options.algorithm == Algorithm::kpc_ima || options.algorithm == Algorithm::kpc_ima_straight;
+  const bool bounded = options.algorithm == Algorithm::ima ||
+                       options.algorithm == Algorithm::blset ||
+                       options.algorithm == Algorithm::t_kpc_ima;
+  const bool reduced = options.algorithm == Algorithm::t_mls ||
+                       options.algorithm == Algorithm::t_kpc_mls ||
+                       options.algorithm == Algorithm::t_kpc_ima;
   if (overlay && targets.empty())
     throw std::invalid_argument("cover search requires explicit targets");
   if (bounded && (targets.size() != 1 || graph.model() != Model::additive))
@@ -171,13 +168,7 @@ SearchResult search(const Graph& graph, Node source, std::vector<Node> targets,
     const auto infinity = std::numeric_limits<double>::infinity();
     lower.assign(graph.size(), AdditiveCost(dimensions, infinity));
     std::vector<std::vector<std::pair<Node, const Cost*>>> reverse(graph.size());
-    // The direct variant bounds the original graph; kpc-ima bounds the overlay
-    // augmented with connectors from every non-cover source.
-    if (options.algorithm == Algorithm::kpc_ima) {
-      for (const auto& arcs : adjacency)
-        for (const auto& arc : arcs) reverse[arc.to].emplace_back(arc.from, arc.cost);
-    } else
-      for (const auto& e : graph.edges()) reverse[e.to].emplace_back(e.from, &e.cost);
+    for (const auto& e : graph.edges()) reverse[e.to].emplace_back(e.from, &e.cost);
     for (std::size_t d = 0; d < dimensions; ++d) {
       using Item = std::pair<double, Node>;
       std::priority_queue<Item, std::vector<Item>, std::greater<>> queue;

@@ -1,0 +1,269 @@
+{
+  "schema_version": 1,
+  "datasets": [
+    {
+      "id": "bayern",
+      "format": "csv",
+      "model": "ev",
+      "criteria": [
+        "time",
+        "consumption"
+      ],
+      "nodes": 294727,
+      "edges": 587781,
+      "source": "https://www.openstreetmap.org/copyright",
+      "attribution": "© OpenStreetMap contributors",
+      "license": "ODbL-1.0",
+      "license_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+      "modifications": [
+        "Residential roads removed in the supplied research graph",
+        "Edge columns reordered to from,to,time,consumption; weights and IDs preserved",
+        "Node columns normalized to id,x,y using the supplied projected coordinates"
+      ],
+      "files": [
+        {
+          "archive": "osm/bayern_edges.csv.gz",
+          "path": "osm/bayern_edges.csv",
+          "sha256": "aea095f6ab3182fced9b8ae8c6124b72014e6f0efcf9e7328fecb994347e6fe1",
+          "bytes": 12595785,
+          "gzip_sha256": "60806a375b2eed2f50de0cb56fc3fde9b0566e1686201741b2fefed7f7a5ddb8",
+          "compressed_bytes": 4439598,
+          "source_name": "bayern_edges.csv",
+          "source_sha256": "99e493a9847c45136732a281562bbbafbfdf54e2894583a7525cb23c88959710"
+        },
+        {
+          "archive": "osm/bayern_nodes.csv.gz",
+          "path": "osm/bayern_nodes.csv",
+          "sha256": "9819c3858611b2b7d97f5f1d4422a1fd7e7ad9ff11ba42d563826af3ed39253a",
+          "bytes": 7846526,
+          "gzip_sha256": "372deda2d64ff3cdfd29301c2c4555799ef9debcba695b5c35a7f5d5333e0bf6",
+          "compressed_bytes": 2730413,
+          "source_name": "bayern_nodes.csv",
+          "source_sha256": "a2f8a2f6a9a2a4d673199b1585a65550fc6c62e34bf92aadc623845c8f2142c3"
+        }
+      ]
+    },
+    {
+      "id": "germany",
+      "format": "csv",
+      "model": "ev",
+      "criteria": [
+        "time",
+        "consumption"
+      ],
+      "nodes": 1521776,
+      "edges": 2947009,
+      "source": "https://www.openstreetmap.org/copyright",
+      "attribution": "© OpenStreetMap contributors",
+      "license": "ODbL-1.0",
+      "license_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+      "modifications": [
+        "Residential roads removed in the supplied research graph",
+        "Edge columns reordered to from,to,time,consumption; weights and IDs preserved",
+        "Node columns normalized to id,x,y using the supplied projected coordinates"
+      ],
+      "files": [
+        {
+          "archive": "osm/germany_edges.csv.gz",
+          "path": "osm/germany_edges.csv",
+          "sha256": "8b3607d35aa798b56f3417f648557442c77f288e3aecf5486cbffe9fa9608623",
+          "bytes": 66644615,
+          "gzip_sha256": "39e4969131875f4814ffc0a84dab0741711962aed2d2e75fcf65333d2b3990fd",
+          "compressed_bytes": 23097204,
+          "source_name": "germany_edges.csv",
+          "source_sha256": "c7610f6e52270e4f96472f90e85cde8d0f616d67942b29350e99257868761433"
+        },
+        {
+          "archive": "osm/germany_nodes.csv.gz",
+          "path": "osm/germany_nodes.csv",
+          "sha256": "2373461e94094bb20bab3357e60c913e2538f837272b4a0c666afc1d0552c989",
+          "bytes": 41498625,
+          "gzip_sha256": "146871dffb97d60cf2c09a5820aa464dde00c25007bde7e43922c12510777513",
+          "compressed_bytes": 14429117,
+          "source_name": "germany_nodes.csv",
+          "source_sha256": "4cc39243cec98fffe9c00100dc92b8917a6ccd6355eb9f837a6fdc48e025ff0d"
+        }
+      ]
+    },
+    {
+      "id": "NY",
+      "format": "dimacs",
+      "model": "additive",
+      "criteria": [
+        "distance",
+        "time"
+      ],
+      "nodes": 264346,
+      "edges": 733846,
+      "source": "https://www.diag.uniroma1.it/~challenge9/download.shtml",
+      "attribution": "9th DIMACS Implementation Challenge; U.S. Census TIGER/Line road networks",
+      "license": "Public-domain collection unless otherwise noted by the challenge",
+      "removed_test_query_pairs": 100,
+      "modifications": [
+        "Leading private test-query pairs removed; both graph blocks and arc order preserved"
+      ],
+      "files": [
+        {
+          "archive": "dimacs/NY.gr.gz",
+          "path": "dimacs/NY.gr",
+          "sha256": "61d92887f7044a604970f18991952956857d9f2b57a9b564ecbe77a9c4a924c1",
+          "bytes": 29196754,
+          "gzip_sha256": "8fbc86adf8decf7451fc0d17410016aae53b30bf7b8e2a6539e52b7752e917cc",
+          "compressed_bytes": 7433844,
+          "source_name": "USA-road-f.NY.gr",
+          "source_sha256": "ddfcf8d887b860d8e91fea23713a0d4306a42e6aab9b73afdc8f7831836da0de"
+        }
+      ]
+    },
+    {
+      "id": "BAY",
+      "format": "dimacs",
+      "model": "additive",
+      "criteria": [
+        "distance",
+        "time"
+      ],
+      "nodes": 321270,
+      "edges": 800172,
+      "source": "https://www.diag.uniroma1.it/~challenge9/download.shtml",
+      "attribution": "9th DIMACS Implementation Challenge; U.S. Census TIGER/Line road networks",
+      "license": "Public-domain collection unless otherwise noted by the challenge",
+      "removed_test_query_pairs": 100,
+      "modifications": [
+        "Leading private test-query pairs removed; both graph blocks and arc order preserved"
+      ],
+      "files": [
+        {
+          "archive": "dimacs/BAY.gr.gz",
+          "path": "dimacs/BAY.gr",
+          "sha256": "10f8c3494fd08130b3fcb8695afffd1de90fa6c786655a7fa788ee9ec45e9236",
+          "bytes": 32058278,
+          "gzip_sha256": "0f7f33bb04c4c3db6a7df2b0263faaf64929a4560f8c82f222e7557230aa5d8d",
+          "compressed_bytes": 8367042,
+          "source_name": "USA-road-f.BAY.gr",
+          "source_sha256": "b70c47503bb5e42152a2b0837560279dd6153f6cd53effa55ab487984f03f12d"
+        }
+      ]
+    },
+    {
+      "id": "COL",
+      "format": "dimacs",
+      "model": "additive",
+      "criteria": [
+        "distance",
+        "time"
+      ],
+      "nodes": 435666,
+      "edges": 1057066,
+      "source": "https://www.diag.uniroma1.it/~challenge9/download.shtml",
+      "attribution": "9th DIMACS Implementation Challenge; U.S. Census TIGER/Line road networks",
+      "license": "Public-domain collection unless otherwise noted by the challenge",
+      "removed_test_query_pairs": 100,
+      "modifications": [
+        "Leading private test-query pairs removed; both graph blocks and arc order preserved"
+      ],
+      "files": [
+        {
+          "archive": "dimacs/COL.gr.gz",
+          "path": "dimacs/COL.gr",
+          "sha256": "3580b2d127f8335a553dbeb5368376b88a4f238237e66defc9557eaeda5fedbe",
+          "bytes": 43104132,
+          "gzip_sha256": "3293c5b27f554be6c9734767715232b49350583c308383828e64ad7145431c54",
+          "compressed_bytes": 11652153,
+          "source_name": "USA-road-f.COL.gr",
+          "source_sha256": "da3a7d8cf38cd06525df7103301ad0c9b61b7d781cbf9f06c06272fbadb796c7"
+        }
+      ]
+    },
+    {
+      "id": "FLA",
+      "format": "dimacs",
+      "model": "additive",
+      "criteria": [
+        "distance",
+        "time"
+      ],
+      "nodes": 1070376,
+      "edges": 2712798,
+      "source": "https://www.diag.uniroma1.it/~challenge9/download.shtml",
+      "attribution": "9th DIMACS Implementation Challenge; U.S. Census TIGER/Line road networks",
+      "license": "Public-domain collection unless otherwise noted by the challenge",
+      "removed_test_query_pairs": 100,
+      "modifications": [
+        "Leading private test-query pairs removed; both graph blocks and arc order preserved"
+      ],
+      "files": [
+        {
+          "archive": "dimacs/FLA.gr.gz",
+          "path": "dimacs/FLA.gr",
+          "sha256": "010b01699469f74092195ed74db57c177d13f9b4c22d2dd4edb4743fd5a11030",
+          "bytes": 112349182,
+          "gzip_sha256": "99b35d891a19e9ba365a987151026ac835c0248a4062c30b8f055259436896ed",
+          "compressed_bytes": 29254211,
+          "source_name": "USA-road-f.FLA.gr",
+          "source_sha256": "ba1b25d60dcfe5c48c176cf6de8a112b7ab3a67069a18a5253fd95525c136b16"
+        }
+      ]
+    },
+    {
+      "id": "NE",
+      "format": "dimacs",
+      "model": "additive",
+      "criteria": [
+        "distance",
+        "time"
+      ],
+      "nodes": 1524453,
+      "edges": 3897636,
+      "source": "https://www.diag.uniroma1.it/~challenge9/download.shtml",
+      "attribution": "9th DIMACS Implementation Challenge; U.S. Census TIGER/Line road networks",
+      "license": "Public-domain collection unless otherwise noted by the challenge",
+      "removed_test_query_pairs": 100,
+      "modifications": [
+        "Leading private test-query pairs removed; both graph blocks and arc order preserved"
+      ],
+      "files": [
+        {
+          "archive": "dimacs/NE.gr.gz",
+          "path": "dimacs/NE.gr",
+          "sha256": "83cab9376b9b8d019020e6402dfe9ae234ea3daf3aa67a7464506cea49e81cf5",
+          "bytes": 166044662,
+          "gzip_sha256": "107d04fe1511d627bd731f519a93876f9cbbca76fd1fb3a0ff202dcdf0e72eb0",
+          "compressed_bytes": 44014932,
+          "source_name": "USA-road-f.NE.gr",
+          "source_sha256": "a835b13de37883cb81778c9d77a96b5514f90ecf92896dd26a1f3c38b5820e1d"
+        }
+      ]
+    },
+    {
+      "id": "NW",
+      "format": "dimacs",
+      "model": "additive",
+      "criteria": [
+        "distance",
+        "time"
+      ],
+      "nodes": 1207945,
+      "edges": 2840208,
+      "source": "https://www.diag.uniroma1.it/~challenge9/download.shtml",
+      "attribution": "9th DIMACS Implementation Challenge; U.S. Census TIGER/Line road networks",
+      "license": "Public-domain collection unless otherwise noted by the challenge",
+      "removed_test_query_pairs": 0,
+      "modifications": [
+        "Leading private test-query pairs removed; both graph blocks and arc order preserved"
+      ],
+      "files": [
+        {
+          "archive": "dimacs/NW.gr.gz",
+          "path": "dimacs/NW.gr",
+          "sha256": "4a1e61f3989f8bc31f17c98d243dbc42539e59d9042aff102ba51d631475bac5",
+          "bytes": 119789228,
+          "gzip_sha256": "97b85adb055f69f873c76685d09d4fbdf46ab23630b3a88c2e878d9987bb8d11",
+          "compressed_bytes": 32270450,
+          "source_name": "USA-road-f.NW.gr",
+          "source_sha256": "4a1e61f3989f8bc31f17c98d243dbc42539e59d9042aff102ba51d631475bac5"
+        }
+      ]
+    }
+  ]
+}

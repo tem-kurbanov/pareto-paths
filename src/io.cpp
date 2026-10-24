@@ -4,6 +4,7 @@
 #include <fstream>
 #include <limits>
 #include <random>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 
@@ -50,104 +51,112 @@ struct RawEdge {
   std::vector<std::string> costs;
 };
 using Points = std::map<Node, Point>;
-void read_nodes(std::istream& input, Points& points, bool header, bool stop_at_blank) {
+void read_nodes(std::istream& input, Points& points) {
   std::string line;
-  bool first = true;
+  bool header = false;
   while (std::getline(input, line)) {
     line = trim(line);
-    if (line.empty()) {
-      if (stop_at_blank)
-        return;
-      else
-        continue;
-    }
-    if (line[0] == '#') continue;
-    auto f = split(line);
-    if (first && header) {
-      first = false;
-      if (f != std::vector<std::string>{"id", "x", "y"} &&
-          f != std::vector<std::string>{"elevation", "id", "latitude", "latitudeProjected",
-                                        "longitude", "longitudeProjected"})
-        throw std::invalid_argument("nodes header must be id,x,y or the legacy six-column header");
+    if (line.empty() || line[0] == '#') continue;
+    auto fields = split(line);
+    if (!header) {
+      if (fields != std::vector<std::string>{"id", "x", "y"})
+        throw std::invalid_argument("nodes header must be id,x,y");
+      header = true;
       continue;
     }
-    first = false;
-    if (f.size() != 3 && f.size() != 6) throw std::invalid_argument("invalid coordinate row");
-    const Node node = natural(f[f.size() == 3 ? 0 : 1]);
-    const Point p = f.size() == 3 ? Point{real(f[1]), real(f[2])} : Point{real(f[3]), real(f[5])};
-    if (!points.emplace(node, p).second) throw std::invalid_argument("duplicate node id");
+    if (fields.size() != 3) throw std::invalid_argument("coordinate rows require id,x,y");
+    const Node node = natural(fields[0]);
+    if (!points.emplace(node, Point{real(fields[1]), real(fields[2])}).second)
+      throw std::invalid_argument("duplicate node id");
   }
+  if (!header || points.empty())
+    throw std::invalid_argument("node CSV requires a header and coordinates");
 }
 struct Dimacs {
   std::size_t nodes{};
+  std::size_t blocks{};
   std::vector<RawEdge> edges;
 };
 Dimacs read_dimacs(const std::filesystem::path& path) {
   std::ifstream in(path);
   if (!in) throw std::runtime_error("cannot open DIMACS file: " + path.string());
   Dimacs result;
-  std::size_t expected{};
+  std::size_t expected{}, count{};
   std::string line;
-  bool header = false;
   while (std::getline(in, line)) {
     std::istringstream row(line);
     std::string kind, extra;
     if (!(row >> kind) || kind == "c") continue;
     if (kind == "p") {
       std::string problem, n, m;
-      if (header || !(row >> problem >> n >> m) || problem != "sp" || row >> extra)
+      if (result.blocks >= 2 || !(row >> problem >> n >> m) || problem != "sp" || row >> extra)
         throw std::invalid_argument("invalid DIMACS p sp header");
-      result.nodes = natural(n);
-      expected = natural(m);
-      header = true;
+      const auto nodes = natural(n), arcs = natural(m);
+      if (!nodes) throw std::invalid_argument("DIMACS graph must contain vertices");
+      if (result.blocks && (count != expected || nodes != result.nodes || arcs != expected))
+        throw std::invalid_argument("paired DIMACS graph counts differ");
+      result.nodes = nodes;
+      expected = arcs;
+      count = 0;
+      ++result.blocks;
     } else if (kind == "a") {
       std::string f, t, w;
-      if (!header || !(row >> f >> t >> w) || row >> extra)
+      if (!result.blocks || !(row >> f >> t >> w) || row >> extra || count >= expected)
         throw std::invalid_argument("invalid DIMACS arc");
       auto from = natural(f), to = natural(t);
       if (!from || !to || from > result.nodes || to > result.nodes)
         throw std::invalid_argument("DIMACS vertices must be 1-based and in range");
-      result.edges.push_back({from - 1, to - 1, {w}});
+      if (result.blocks == 1) {
+        result.edges.push_back({from - 1, to - 1, {w}});
+      } else {
+        auto& edge = result.edges[count];
+        if (edge.from != from - 1 || edge.to != to - 1)
+          throw std::invalid_argument("paired DIMACS arc ordering differs");
+        edge.costs.push_back(w);
+      }
+      ++count;
     } else
-      throw std::invalid_argument(
-          "expected DIMACS p/a/c records; origin-destination pair files are not graph files");
+      throw std::invalid_argument("expected DIMACS p/a/c records; remove test-query prefixes");
   }
-  if (!header || !result.nodes || result.edges.size() != expected)
+  if (!result.blocks || count != expected)
     throw std::invalid_argument("DIMACS header or arc count mismatch");
   return result;
 }
 }  // namespace
 Graph load_graph(const std::filesystem::path& path, LoadOptions options) {
+  if (options.format != "csv" && options.format != "dimacs")
+    throw std::invalid_argument("format must be csv or dimacs");
   std::vector<RawEdge> edges;
   Points points;
   std::size_t nodes{}, dimensions{};
   if (options.second_weights && options.format != "dimacs")
     throw std::invalid_argument("--second-weights requires dimacs format");
   if (options.format == "dimacs") {
-    if (options.model != Model::additive || !options.second_weights)
-      throw std::invalid_argument("DIMACS needs additive model and paired --second-weights");
-    auto first = read_dimacs(path), second = read_dimacs(*options.second_weights);
-    if (first.nodes != second.nodes || first.edges.size() != second.edges.size())
-      throw std::invalid_argument("DIMACS graph sizes differ");
-    edges = std::move(first.edges);
+    if (options.model != Model::additive)
+      throw std::invalid_argument("DIMACS requires the additive model");
+    auto first = read_dimacs(path);
+    if (options.second_weights) {
+      auto second = read_dimacs(*options.second_weights);
+      if (first.blocks != 1 || second.blocks != 1)
+        throw std::invalid_argument("--second-weights requires one graph block in each file");
+      if (first.nodes != second.nodes || first.edges.size() != second.edges.size())
+        throw std::invalid_argument("DIMACS graph sizes differ");
+      for (std::size_t i = 0; i < first.edges.size(); ++i) {
+        if (first.edges[i].from != second.edges[i].from || first.edges[i].to != second.edges[i].to)
+          throw std::invalid_argument("paired DIMACS arc ordering differs");
+        first.edges[i].costs.push_back(second.edges[i].costs[0]);
+      }
+    } else if (first.blocks != 2) {
+      throw std::invalid_argument("DIMACS requires two graph blocks or --second-weights");
+    }
     nodes = first.nodes;
     dimensions = 2;
-    for (std::size_t i = 0; i < edges.size(); ++i) {
-      if (edges[i].from != second.edges[i].from || edges[i].to != second.edges[i].to)
-        throw std::invalid_argument("paired DIMACS arc ordering differs");
-      edges[i].costs.push_back(second.edges[i].costs[0]);
-    }
+    edges = std::move(first.edges);
   } else {
-    if (options.format != "csv" && options.format != "legacy-edges" &&
-        options.format != "legacy-random" && options.format != "legacy-full")
-      throw std::invalid_argument("unknown graph format: " + options.format);
-    if (options.model == Model::ev && options.format == "legacy-random")
-      throw std::invalid_argument("legacy-random costs do not define EV consumption");
     std::ifstream in(path);
     if (!in) throw std::runtime_error("cannot open graph: " + path.string());
-    if (options.format == "legacy-full") read_nodes(in, points, false, true);
     std::string line;
-    bool header = options.format == "csv" || options.format == "legacy-edges";
+    bool header = true;
     std::size_t row_number = 0;
     while (std::getline(in, line)) {
       ++row_number;
@@ -157,34 +166,21 @@ Graph load_graph(const std::filesystem::path& path, LoadOptions options) {
         auto f = split(line);
         if (header) {
           header = false;
-          if (options.format == "csv") {
-            if (f.size() < 4 || f[0] != "from" || f[1] != "to")
-              throw std::invalid_argument(
-                  "CSV header must start from,to and name at least two criteria");
-            dimensions = f.size() - 2;
-            if (options.model == Model::ev &&
-                f != std::vector<std::string>{"from", "to", "time", "consumption"})
-              throw std::invalid_argument("EV CSV header must be from,to,time,consumption");
-          } else if (f != std::vector<std::string>{"comsumption", "fromId", "time", "toId"} &&
-                     f != std::vector<std::string>{"consumption", "fromId", "time", "toId"})
-            throw std::invalid_argument("unrecognized legacy edge header");
+          if (f.size() < 4 || f[0] != "from" || f[1] != "to")
+            throw std::invalid_argument(
+                "CSV header must start from,to and name at least two criteria");
+          if (std::any_of(f.begin(), f.end(), [](const auto& name) { return name.empty(); }) ||
+              std::set<std::string>(f.begin(), f.end()).size() != f.size())
+            throw std::invalid_argument("CSV column names must be nonempty and unique");
+          dimensions = f.size() - 2;
+          if (options.model == Model::ev &&
+              f != std::vector<std::string>{"from", "to", "time", "consumption"})
+            throw std::invalid_argument("EV CSV header must be from,to,time,consumption");
           continue;
         }
-        if (options.format == "csv") {
-          if (f.size() != dimensions + 2)
-            throw std::invalid_argument("inconsistent CSV row dimension");
-          edges.push_back({natural(f[0]), natural(f[1]), {f.begin() + 2, f.end()}});
-        } else if (options.format == "legacy-random") {
-          if (f.size() != 5)
-            throw std::invalid_argument("legacy-random requires from,to,time,cost1,cost2");
-          dimensions = 3;
-          edges.push_back({natural(f[0]), natural(f[1]), {f[2], f[3], f[4]}});
-        } else {
-          if (f.size() != 4)
-            throw std::invalid_argument("legacy edge row requires consumption,from,time,to");
-          dimensions = 2;
-          edges.push_back({natural(f[1]), natural(f[3]), {f[2], f[0]}});
-        }
+        if (f.size() != dimensions + 2)
+          throw std::invalid_argument("inconsistent CSV row dimension");
+        edges.push_back({natural(f[0]), natural(f[1]), {f.begin() + 2, f.end()}});
       } catch (const std::exception& e) {
         throw std::invalid_argument(path.string() + ":" + std::to_string(row_number) + ": " +
                                     e.what());
@@ -193,11 +189,9 @@ Graph load_graph(const std::filesystem::path& path, LoadOptions options) {
     if (header || dimensions < 2) throw std::invalid_argument("missing graph header or edges");
   }
   if (options.nodes) {
-    if (options.format == "legacy-full")
-      throw std::invalid_argument("legacy-full already contains nodes");
     std::ifstream in(*options.nodes);
     if (!in) throw std::runtime_error("cannot open nodes: " + options.nodes->string());
-    read_nodes(in, points, true, false);
+    read_nodes(in, points);
   }
   auto include_node = [&](Node v) {
     if (v == std::numeric_limits<Node>::max()) throw std::overflow_error("node id overflow");

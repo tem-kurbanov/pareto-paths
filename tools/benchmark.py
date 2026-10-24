@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reproduce the README experiment. Requires Python 3.9+ and matplotlib 3.9+."""
+"""Run the small synthetic smoke benchmark. Requires Python 3.9+ and matplotlib 3.9+."""
 import argparse
 import csv
 import datetime

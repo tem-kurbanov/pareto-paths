@@ -2,7 +2,7 @@
 
 The author has selected the **MIT License** and authorized public publication as `tem-kurbanov/pareto-paths`.
 
-The software license is in the root `LICENSE` file. The README and `CITATION.cff` credit the associated paper and all its authors. Publisher PDFs and external datasets are excluded; their separate licensing terms are unaffected.
+The software license is in the root `LICENSE` file. The README and `CITATION.cff` credit the associated paper and all its authors. Publisher PDFs are excluded. Bundled datasets retain their separate licenses and attribution, documented under `datasets/`; the MIT license applies to the software.
 
 ## Publishing
 
@@ -17,4 +17,4 @@ gh repo create tem-kurbanov/pareto-paths --public --source . --remote origin --p
 
 If the repository already exists, verify ownership and its contents before adding it as `origin` and pushing. Do not overwrite unrelated remote work or force-push.
 
-Before a versioned release, run the documented clean build and tests, inspect the committed file list for accidental data, credentials, PDFs or binaries, and confirm GitHub Actions succeeds. Suggested repository topics: `cpp20`, `multiobjective-optimization`, `shortest-path`, `graph-algorithms`, and `research-software`.
+Before a versioned release, run the documented clean build and tests, inspect the committed file list for unintended files, credentials, publisher PDFs or compiled binaries, and confirm GitHub Actions succeeds. Suggested repository topics: `cpp20`, `multiobjective-optimization`, `shortest-path`, `graph-algorithms`, and `research-software`.

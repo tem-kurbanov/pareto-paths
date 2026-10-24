@@ -31,9 +31,9 @@ void throws(F&& action, const std::string& message) {
   }
   check(caught, message);
 }
-const std::vector<Algorithm> exact{
-    Algorithm::mls, Algorithm::t_mls, Algorithm::kpc_mls, Algorithm::t_kpc_mls,
-    Algorithm::ima, Algorithm::blset, Algorithm::kpc_ima, Algorithm::kpc_ima_straight};
+const std::vector<Algorithm> exact{Algorithm::mls,       Algorithm::t_mls, Algorithm::kpc_mls,
+                                   Algorithm::t_kpc_mls, Algorithm::ima,   Algorithm::blset,
+                                   Algorithm::t_kpc_ima};
 static_assert(!std::is_aggregate_v<Cover>);
 static_assert(
     std::is_same_v<decltype(std::declval<Cover&>().shortcuts()), const std::vector<Shortcut>&>);
@@ -303,6 +303,11 @@ void ev() {
          "EV compose overflow");
 }
 void boundaries() {
+  check(parse_algorithm("t-kpc-ima") == Algorithm::t_kpc_ima, "renamed t-kPC-IMA parser");
+  check(algorithm_name(Algorithm::t_kpc_ima) == "t-kpc-ima", "renamed t-kPC-IMA output");
+  check(uses_cover(Algorithm::t_kpc_ima), "t-kPC-IMA uses cover");
+  throws([] { (void)parse_algorithm("kpc-ima"); }, "removed kPC-IMA name rejected");
+  throws([] { (void)parse_algorithm("kpc-ima-straight"); }, "old straight name rejected");
   throws([] { Graph(0); }, "empty graph rejected");
   throws([] { Graph(2, 1); }, "single criterion rejected");
   Graph g(3);
@@ -372,22 +377,51 @@ void io(const std::filesystem::path& dir) {
   throws([&] { (void)load_graph(bad); }, "numeric trailing garbage");
   auto short_row = write("short.csv", "from,to,time,distance\n0,1,2,\n");
   throws([&] { (void)load_graph(short_row); }, "empty field");
-  auto legacy = write("legacy.csv", "comsumption,fromId,time,toId\n8,0,2,1\n4,1,3,2\n");
+  for (const auto* removed : {"legacy-edges", "legacy-random", "legacy-full"}) {
+    LoadOptions unsupported;
+    unsupported.format = removed;
+    throws([&] { (void)load_graph(csv, unsupported); }, "unsupported import format rejected");
+  }
+  auto old_order = write("wrong-order.csv", "consumption,fromId,time,toId\n8,0,2,1\n");
+  throws([&] { (void)load_graph(old_order); }, "edge endpoints must precede criteria");
+  auto fixed_order = write("normalized.csv", "from,to,time,consumption\n0,1,2,8\n1,2,3,-4\n");
+  LoadOptions fixed_options;
+  fixed_options.model = Model::ev;
+  fixed_options.capacity = 10;
+  auto normalized = load_graph(fixed_order, fixed_options);
+  check(normalized.edges()[0].from == 0 && normalized.edges()[0].to == 1,
+        "normalized OSM endpoints are the first two columns");
+  check(std::get<BatteryCost>(search(normalized, 0, {2}).routes.at(2)[0].cost) ==
+            BatteryCost{5, 8, 4, 6},
+        "normalized OSM time/consumption order and regeneration");
+  auto multidimensional = write("criteria.csv", "from,to,time,cost1,cost2\n0,1,2,3,4\n");
+  auto three = load_graph(multidimensional);
+  check(three.dimensions() == 3 &&
+            std::get<AdditiveCost>(three.edges()[0].cost) == AdditiveCost{2, 3, 4},
+        "CSV loads every named criterion in column order");
+  auto duplicate_names = write("duplicate-names.csv", "from,to,time,time\n0,1,2,3\n");
+  throws([&] { (void)load_graph(duplicate_names); }, "duplicate criterion names rejected");
+  auto empty_name = write("empty-name.csv", "from,to,time,\n0,1,2,3\n");
+  throws([&] { (void)load_graph(empty_name); }, "empty criterion name rejected");
+  auto coordinates = write("nodes.csv", "id,x,y\n0,10,20\n1,11,21\n2,12,22\n3,13,23\n");
+  LoadOptions coordinate_options;
+  coordinate_options.nodes = coordinates;
+  auto positioned = load_graph(csv, coordinate_options);
+  check(positioned.size() == 4 && positioned.point(3)->x == 13 && positioned.point(3)->y == 23,
+        "canonical coordinates preserve isolated nodes and x/y order");
+  auto bad_nodes = write(
+      "bad-nodes.csv",
+      "elevation,id,latitude,latitudeProjected,longitude,longitudeProjected\n0,0,0,10,0,20\n");
+  coordinate_options.nodes = bad_nodes;
+  throws([&] { (void)load_graph(csv, coordinate_options); },
+         "noncanonical coordinate header rejected");
+  auto duplicate_nodes = write("duplicate-nodes.csv", "id,x,y\n0,10,20\n0,11,21\n");
+  coordinate_options.nodes = duplicate_nodes;
+  throws([&] { (void)load_graph(csv, coordinate_options); }, "duplicate coordinate ID rejected");
+  auto no_nodes = write("empty-nodes.csv", "id,x,y\n");
+  coordinate_options.nodes = no_nodes;
+  throws([&] { (void)load_graph(csv, coordinate_options); }, "empty coordinate file rejected");
   LoadOptions opt;
-  opt.format = "legacy-edges";
-  check(load_graph(legacy, opt).fingerprint() == graph.fingerprint(), "legacy edge import");
-  opt.model = Model::ev;
-  opt.capacity = 10;
-  auto evgraph = load_graph(legacy, opt);
-  check(evgraph.model() == Model::ev && evgraph.size() == 3, "legacy EV import");
-  auto full = write("full.csv", "0,0,0,0,0,0\n0,1,0,1,0,0\n\n8,0,2,1\n");
-  opt.format = "legacy-full";
-  auto fullgraph = load_graph(full, opt);
-  check(fullgraph.point(1)->x == 1 && fullgraph.edges().size() == 1, "combined legacy import");
-  auto random = write("random.csv", "0,1,2,3,4\n");
-  opt = {};
-  opt.format = "legacy-random";
-  check(load_graph(random, opt).dimensions() == 3, "random criteria import uses file values");
   auto first = write("first.gr", "c sample\np sp 3 2\na 1 2 2\na 2 3 3\n");
   auto second = write("second.gr", "p sp 3 2\na 1 2 8\na 2 3 4\n");
   opt = {};
@@ -397,6 +431,27 @@ void io(const std::filesystem::path& dir) {
   auto invalid = write("invalid.gr", "p sp 3 2\na 1 3 8\na 2 3 4\n");
   opt.second_weights = invalid;
   throws([&] { (void)load_graph(first, opt); }, "paired arc order validation");
+  const std::string combined_text =
+      "c first criterion\np sp 4 2\na 1 2 2\na 2 3 3\n"
+      "c second criterion\np sp 4 2\na 1 2 8\na 2 3 4\n";
+  auto combined = write("combined.gr", combined_text);
+  opt.second_weights.reset();
+  auto combined_graph = load_graph(combined, opt);
+  check(combined_graph.size() == 4, "combined DIMACS retains declared isolated vertices");
+  check(additive_results(search(combined_graph, 0, {2}), 2) == std::vector<AdditiveCost>{{5, 12}},
+        "combined DIMACS criteria pairing");
+  throws([&] { (void)load_graph(first, opt); }, "single DIMACS graph needs second criterion");
+  auto wrong_pair = write("wrong-pair.gr", "p sp 3 1\na 1 2 2\np sp 3 1\na 1 3 8\n");
+  throws([&] { (void)load_graph(wrong_pair, opt); }, "combined DIMACS ordering mismatch");
+  auto wrong_count = write("wrong-count.gr", "p sp 3 2\na 1 2 2\np sp 3 1\na 1 2 8\n");
+  throws([&] { (void)load_graph(wrong_count, opt); }, "combined DIMACS count mismatch");
+  auto third_block = write("third-block.gr", combined_text + "p sp 4 0\n");
+  throws([&] { (void)load_graph(third_block, opt); }, "extra DIMACS graph block rejected");
+  auto with_queries = write("test-prefix.gr", "1 3\n" + combined_text);
+  throws([&] { (void)load_graph(with_queries, opt); },
+         "private test-query prefix is not graph input");
+  opt.second_weights = second;
+  throws([&] { (void)load_graph(combined, opt); }, "ambiguous combined/separate DIMACS inputs");
   const auto cover = build_cover(graph, {2}, {3, 1000, true});
   const auto cache = dir / "graph.cover";
   save_cover(cover, cache);
